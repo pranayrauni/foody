@@ -1,5 +1,5 @@
 import { useAuth0 } from "@auth0/auth0-react";
-import { useMutation } from "react-query";
+import { useMutation } from "@tanstack/react-query";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -25,10 +25,11 @@ export const useCreateMyUser = () => {
         if(!response.ok){
             throw new Error("Failed to create user");
         }
+        return response.json();
     }
 
-    const {mutateAsync: createUser, isLoading, isError, isSuccess} = useMutation(createMyUserRequest);
+    const {mutateAsync: createUser, isPending, isError, isSuccess} = useMutation({mutationFn: createMyUserRequest});
 
 
-    return {createUser, isLoading, isError, isSuccess}
+    return {createUser, isPending, isError, isSuccess}
 }
