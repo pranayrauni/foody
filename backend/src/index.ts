@@ -18,6 +18,10 @@ app.get("/test", async(req: express.Request, res: express.Response) => {
     res.json({message: 'Hello from backend'})
 })
 
+app.get("/health", async(req: express.Request, res: express.Response) => {
+    res.send({message: "health ok!"});
+})
+
 app.use("/api/my/user", myUserRoute);
 
 app.listen(7000, () => {
