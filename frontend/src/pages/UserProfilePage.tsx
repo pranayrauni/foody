@@ -10,8 +10,12 @@ const UserProfilePage = () => {
       return <span>Loading...</span>
     }
 
+    if(!currentUser){
+      return <span>Unable to load user profile</span>;
+    }
+
   return (
-    <UserProfileForm onSave={updateUser} isLoading={isPending}/>
+    <UserProfileForm currentUser={currentUser} onSave={updateUser} isLoading={isPending}/>
   )
 }
 
