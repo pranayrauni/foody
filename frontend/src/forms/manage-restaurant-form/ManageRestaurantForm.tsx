@@ -9,6 +9,8 @@ import MenuSection from "./MenuSection";
 import ImageSection from "./ImageSection";
 import LoadingButton from "@/components/LoadingButton";
 import { Button } from "@/components/ui/button";
+import type { Restaurant } from "@/types";
+import { useEffect } from "react";
 
 const formSchema = z.object({
   restaurantName: z.string().min(1, "Restaurant name is required"),
@@ -25,18 +27,23 @@ const formSchema = z.object({
       price: z.coerce.number().min(1, "Price is required"),
     })
   ),
-  imageFile: z.instanceof(File).describe("Image is required"),
-});
+  imageUrl: z.string().optional(),
+  imageFile: z.instanceof(File).describe("Image is required").optional(),
+}).refine((data) => data.imageUrl || data.imageFile, {
+  message: "Either image URL or image file must be provided",
+  path: ["imageFile"],
+})
 
-type restaurantFormData = z.infer<typeof formSchema>;
+type RestaurantFormData = z.infer<typeof formSchema>;
 
 type Props = {
+  restaurant?: Restaurant;
   onSave: (restaurantFormData: FormData) => void;
   isLoading: boolean;
 };
 
-const ManageRestaurantForm = ({ onSave, isLoading }: Props) => {
-  const form = useForm<restaurantFormData>({
+const ManageRestaurantForm = ({ onSave, isLoading, restaurant }: Props) => {
+  const form = useForm<RestaurantFormData>({
     resolver: zodResolver(formSchema as any),
     defaultValues: {
       cuisines: [],
@@ -44,7 +51,53 @@ const ManageRestaurantForm = ({ onSave, isLoading }: Props) => {
     },
   });
 
-  const onSubmit = (formDataJson: restaurantFormData) => {};
+
+  useEffect(() => {
+    if(!restaurant){
+      return;
+    }
+
+    const deliveryPriceFormatted = parseInt(
+      (restaurant.deliveryPrice / 100).toFixed(2)
+    );
+    
+    const menuItemsFormatted = restaurant.menuItems.map((item) => ({
+      ...item,
+      price: parseInt((item.price / 100).toFixed(2)),
+    }));
+
+    const updatedRestaurant = {
+      ...restaurant,
+      deliveryPrice: deliveryPriceFormatted,
+      menuItems: menuItemsFormatted,
+    };
+
+    form.reset(updatedRestaurant);
+  }, [form, restaurant]);
+
+  const onSubmit = (formDataJson: RestaurantFormData) => {
+    
+    const formData = new FormData();
+
+    formData.append("restaurantName", formDataJson.restaurantName);
+    formData.append("city", formDataJson.city);
+    formData.append("country", formDataJson.country);
+    formData.append("deliveryPrice", (formDataJson.deliveryPrice * 100).toString());
+    formData.append("estimatedDeliveryTime", formDataJson.estimatedDeliveryTime.toString());
+    formDataJson.cuisines.forEach((cuisine, index) => {
+      formData.append(`cuisines[${index}]`, cuisine);
+    });
+    formDataJson.menuItems.forEach((menuItem, index) => {
+      formData.append(`menuItems[${index}][name]`, menuItem.name);
+      formData.append(`menuItems[${index}][price]`, (menuItem.price * 100).toString());
+    });
+
+    if(formDataJson.imageFile){
+      formData.append(`imageFile`, formDataJson.imageFile);
+    }
+
+    onSave(formData);
+  };
 
   return (
     <Form {...form}>
