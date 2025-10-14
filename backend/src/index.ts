@@ -5,6 +5,7 @@ import mongoose from "mongoose";
 import myUserRoute from "./routes/MyUserRoutes.js"
 import { v2 as cloudinary } from 'cloudinary'
 import myRestaurantRoute from "./routes/MyRestaurantRoute.js"
+import restaurantRoute from "./routes/RestaurantRoute.js"
 
 mongoose.connect(process.env.MONGODB_CONNECTION_STRING as string).then(() => {
     console.log("Connected to database")
@@ -31,7 +32,8 @@ app.get("/health", async(req: express.Request, res: express.Response) => {
 })
 
 app.use("/api/my/user", myUserRoute);
-app.use("/api/my/restaurant", myRestaurantRoute)
+app.use("/api/my/restaurant", myRestaurantRoute);
+app.use("/api/restaurant", restaurantRoute);
 
 app.listen(7000, () => {
     console.log(`server started at 7000`); 
